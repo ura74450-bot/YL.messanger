@@ -1199,7 +1199,7 @@ function showIncomingToast(msg){
 // ══════════════════════════════════════════════════════════════
 
 // ── Server config ────────────────────────────────────────────
-const SERVER_URL = 'https://ylmessanger-dun.vercel.app'; // leave empty for local, or paste Render URL
+const SERVER_URL ='ylmessanger-production.up.railway.app'; // leave empty for local, or paste Render URL
 function getApiBase(){ return SERVER_URL || location.protocol+'//'+location.host; }
 function getWsUrl(){ return SERVER_URL ? SERVER_URL.replace('https://','wss://').replace('http://','ws://') : (location.protocol==='https:'?'wss':'ws')+'://'+location.host; }
 async function apiGet(p){ try{ return await(await fetch(getApiBase()+p)).json(); }catch{ return null; } }
