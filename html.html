@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>yoll gamestore</title>
+    <!-- Подключение Lucide Icons для современных иконок -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* --- ГЛОБАЛЬНЫЕ СТИЛИ (Стильная темная тема) --- */
+        :root {
+            --bg-space: #0b0d13;
+            --bg-card: #161923;
+            --bg-card-hover: #1f2331;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #8c93a3;
+            --border: rgba(255, 255, 255, 0.06);
+            --radius-xl: 24px;
+            --radius-m: 16px;
+            --easing: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-space);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- КОНТЕЙНЕР СМАРТФОНА --- */
+        .phone-wrapper {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            max-height: 932px; /* Пропорции iPhone 15 Pro Max */
+            background-color: var(--bg-space);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (min-width: 440px) {
+            .phone-wrapper {
+                border: 8px solid #282a36;
+                border-radius: 48px;
+                height: 85vh;
+            }
+        }
+
+        /* --- ШАПКА --- */
+        .header {
+            padding: 20px 24px 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to bottom, var(--bg-space) 80%, transparent);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #a5b4fc, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ---ОСНОВНОЙ КОНТЕНТ --- */
+        .content-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 24px 100px 24px;
+            position: relative;
+        }
+
+        .content-container::-webkit-scrollbar {
+            width: 0px;
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: opacity 0.35s var(--easing), transform 0.35s var(--easing);
+        }
+
+        .screen.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Стили заголовков внутри экранов */
+        .screen-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            margin-top: 8px;
+        }
+
+        /* --- КОМПОНЕНТЫ: ПОЛЕ ВВОДА --- */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-m);
+            padding: 14px 16px 14px 48px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.25s var(--easing);
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        /* --- ВКЛАДКА: РЕКОМЕНДАЦИИ --- */
+        .games-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .game-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 12px;
+            border: 1px solid var(--border);
+            transition: transform 0.25s var(--easing), background-color 0.25s var(--easing);
+            cursor: pointer;
+        }
+
+        .game-card:active {
+            transform: scale(0.96);
+        }
+
+        .game-cover-wrapper {
+            width: 100%;
+            padding-top: 120%; /* Соотношение сторон обложки */
+            position: relative;
+            border-radius: calc(var(--radius-xl) - 4px);
+            overflow: hidden;
+            margin-bottom: 12px;
+            background-color: #232736;
+        }
+
+        .game-cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .game-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .game-price {
+            font-size: 14px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* --- ВКЛАДКА: СТАТИСТИКА --- */
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 20px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon-preview {
+            width: 54px;
+            height: 54px;
+            border-radius: var(--radius-m);
+            object-fit: cover;
+            background-color: #232736;
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-metrics {
+            display: flex;
+            gap: 16px;
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .metric span {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* --- ВКЛАДКА: МЕССЕНДЖЕР --- */
+        .messenger-layout {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+        }
+        @media (min-width: 440px) { .messenger-layout { height: calc(85vh - 200px); } }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-container::-webkit-scrollbar { width: 0; }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: var(--radius-m);
+            font-size: 15px;
+            line-height: 1.4;
+            animation: msgPop 0.25s var(--easing);
+        }
+
+        @keyframes msgPop {
+            from { opacity: 0; transform: scale(0.9) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .message.incoming {
+            background-color: var(--bg-card);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.outgoing {
+            background-color: var(--accent);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .chat-input-row .input-field {
+            padding-left: 16px;
+        }
+
+        .btn-send {
+            background-color: var(--accent);
+            border: none;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-m);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-send:active { transform: scale(0.9); }
+
+        /* --- ВКЛАДКА: ПРОФИЛЬ --- */
+        .profile-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .avatar-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 16px auto;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+            background-color: #232736;
+        }
+
+        .btn-change-avatar {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background-color: var(--accent);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .profile-name-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .btn-edit-name {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .profile-edit-row {
+            display: none;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-m);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-accent:active { opacity: 0.8; }
+
+        /* --- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ --- */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 84px;
+            background-color: rgba(22, 25, 35, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            align-items: center;
+            padding-bottom: 12px;
+            z-index: 20;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            height: 100%;
+            transition: color 0.25s var(--easing);
+            position: relative;
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+        }
+
+        /* Центральная кнопка Плюс */
+        .nav-item.plus-btn-holder {
+            position: relative;
+            overflow: visible;
+        }
+
+        .plus-button {
+            position: absolute;
+            top: -24px;
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(135deg, var(--accent), #4f46e5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+            transition: transform 0.3s var(--easing);
+        }
+
+        .plus-button:active {
+            transform: scale(0.9) rotate(90deg);
+        }
+
+        /* --- МОДАЛЬНОЕ ОКНО (ВЫЕЗЖАЮЩАЯ ШТОРКА) --- */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s var(--easing);
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-sheet {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-card);
+            border-top-left-radius: var(--radius-xl);
+            border-top-right-radius: var(--radius-xl);
+            padding: 24px;
+            transform: translateY(100%);
+            transition: transform 0.4s var(--easing);
+            max-height: 85%;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.open .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        /* Форма внутри модального окна */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-row-inline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .checkbox-container input {
+            accent-color: var(--accent);
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Загрузка файлов кастомная */
+        .file-upload-trigger {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--bg-space);
+            border: 1px dashed var(--border);
+            padding: 14px;
+            border-radius: var(--radius-m);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: border-color 0.2s;
+        }
+        .file-upload-trigger:hover { border-color: var(--accent); }
+
+        .file-preview-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
+            display: none;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: var(--radius-m);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: background-color 0.2s;
+        }
+        .btn-submit:hover { background-color: #4f46e5; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-wrapper">
+        <!-- Шапка -->
+        <header class="header">
+            <div class="logo">yoll gamestore</div>
+            <i data-lucide="bell" style="color: var(--text-muted); width: 22px; cursor: pointer;"></i>
+        </header>
+
+        <!-- Контент -->
+        <main class="content-container">
+
+            <!-- ЭКРАН 1: РЕКОМЕНДАЦИИ -->
+            <section id="screen-recommendations" class="screen active">
+                <div class="search-wrapper">
+                    <i data-lucide="search" style="width: 18px;"></i>
+                    <input type="text" id="game-search" class="input-field" placeholder="Поиск игр...">
+                </div>
+                <h2 class="screen-title">Рекомендации для вас</h2>
+                <div class="games-grid" id="games-market-list">
+                    <!-- Сюда рендерятся игры -->
+                </div>
+            </section>
+
+            <!-- ЭКРАН 2: СТАТИСТИКА -->
+            <section id="screen-stats" class="screen">
+                <h2 class="screen-title">Ваша студия</h2>
+                <div id="stats-container">
+                    <!-- Логическое состояние пустой/полной статистики -->
+                </div>
+            </section>
+
+            <!-- ЭКРАН 3: МЕССЕНДЖЕР -->
+            <section id="screen-messenger" class="screen">
+                <div class="messenger-layout">
+                    <!-- Верхний поиск юзера -->
+                    <div class="search-wrapper" style="margin-bottom: 12px;">
+                        <i data-lucide="user-search" style="width: 18px;"></i>
+                        <input type="text" id="chat-user-search" class="input-field" placeholder="Введите никнейм и нажмите Enter...">
+                    </div>
+
+                    <!-- Контейнер самого диалога -->
+                    <div class="chat-container" id="chat-box">
+                        <div class="empty-state" id="chat-placeholder">
+                            Введите имя пользователя выше, чтобы начать диалог.
+                        </div>
+                    </div>
+
+                    <!-- Поле отправки -->
+                    <div class="chat-input-row" id="chat-input-area" style="display: none;">
+                        <input type="text" id="chat-msg-input" class="input-field" placeholder="Сообщение...">
+                        <button class="btn-send" id="btn-send-msg">
+                            <i data-lucide="send" style="width: 18px;"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ЭКРАН 4: ПРОФИЛЬ -->
+            <section id="screen-profile" class="screen">
+                <h2 class="screen-title">Мой аккаунт</h2>
+                <div class="profile-card">
+                    <div class="avatar-container">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" alt="Аватар" class="avatar-img" id="user-avatar">
+                        <label class="btn-change-avatar" for="avatar-file-input">
+                            <i data-lucide="camera" style="width: 14px;"></i>
+                        </label>
+                        <input type="file" id="avatar-file-input" class="hidden-input" accept="image/*">
+                    </div>
+
+                    <!-- Отображение имени -->
+                    <div class="profile-name-view" id="name-view-box">
+                        <span class="profile-name" id="display-user-name">Разработчик Yoll</span>
+                        <button class="btn-edit-name" id="btn-trigger-edit-name">
+                            <i data-lucide="edit-3" style="width: 16px;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Редактирование имени -->
+                    <div class="profile-edit-row" id="name-edit-box">
+                        <input type="text" id="input-edit-name" class="input-field" style="padding-left:16px;">
+                        <button class="btn-accent" id="btn-save-name" style="padding:10px 16px;">Ок</button>
+                    </div>
+
+                    <div style="color: var(--text-muted); font-size: 14px; text-align: left; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;">
+                        <p style="margin-bottom: 6px;">ID: <span>7749201</span></p>
+                        <p>Статус: <span>Издатель игр</span></p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Модальное окно (Шторка добавления игры) -->
+        <div class="modal-overlay" id="add-game-modal">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <h3 style="font-size: 18px; font-weight: 700;">Опубликовать игру</h3>
+                    <button class="modal-close" id="btn-close-modal">
+                        <i data-lucide="x" style="width: 24px;"></i>
+                    </button>
+                </div>
+
+                <form id="add-game-form" onsubmit="event.preventDefault();">
+                    <div class="form-group">
+                        <label class="form-label">Название игры</label>
+                        <input type="text" id="form-game-title" class="input-field" style="padding-left:16px;" placeholder="Например, Space Clicker" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Иконка приложения</label>
+                        <label class="file-upload-trigger" for="form-game-icon">
+                            <i data-lucide="image" style="width: 18px;"></i>
+                            <span id="icon-file-name">Выбрать изображение</span>
+                            <img id="form-icon-preview" class="file-preview-img" alt="Превью">
+                        </label>
+                        <input type="file" id="form-game-icon" class="hidden-input" accept="image/*" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Стоимость</label>
+                        <div class="form-row-inline">
+                            <input type="number" id="form-game-price" class="input-field" style="padding-left:16px; flex: 1;" placeholder="Цена в ₽" min="0">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="form-game-free">
+                                <span>Бесплатно</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Скрипт игры (HTML-файл)</label>
+                        <label class="file-upload-trigger" for="form-game-file">
+                            <i data-lucide="file-code" style="width: 18px;"></i>
+                            <span id="game-file-name">Загрузить .html файл</span>
+                        </label>
+                        <input type="file" id="form-game-file" class="hidden-input" accept=".html" required>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btn-submit-game">Опубликовать в маркет</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Нижний Навбар -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" data-screen="recommendations">
+                <i data-lucide="sparkles" style="width: 22px; margin-bottom: 4px;"></i>
+                <span style="font-size: 11px;">Рекомендации</span>
+            </div>
+            <div class="nav-item" data-screen="stats">
+                <i data-lucide="bar-chart-3" style="width: 22px; margin-bottom: 4px;"></i>
+                <span style="font-size: 11px;">Статистика</span>
+            </div>
+            <div class="nav-item plus-btn-holder">
+                <div class="plus-button" id="btn-trigger-plus">
+                    <i data-lucide="plus" style="width: 28px;"></i>
+                </div>
+            </div>
+            <div class="nav-item" data-screen="messenger">
+                <i data-lucide="message-square" style="width: 22px; margin-bottom: 4px;"></i>
+                <span style="font-size: 11px;">Чаты</span>
+            </div>
+            <div class="nav-item" data-screen="profile">
+                <i data-lucide="user" style="width: 22px; margin-bottom: 4px;"></i>
+                <span style="font-size: 11px;">Профиль</span>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ЛОГИКА ПРИЛОЖЕНИЯ -->
+    <script>
+        // Инициализация дефолтных данных, если локальное хранилище пусто (Имитирует Базу Данных Сервера)
+        if (!localStorage.getItem('yoll_initialized')) {
+            const defaultMarketGames = [
+                { id: 1, title: "Neon Cyber Runner", price: "349 ₽", cover: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300", isUserOwned: false },
+                { id: 2, title: "Pixel Dungeon Craft", price: "Бесплатно", cover: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=300", isUserOwned: false },
+                { id: 3, title: "Shadow Ninja RPG", price: "199 ₽", cover: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300", isUserOwned: false }
+            ];
+            localStorage.setItem('market_games', JSON.stringify(defaultMarketGames));
+            localStorage.setItem('user_published_games', JSON.stringify([]));
+            localStorage.setItem('profile_name', 'Разработчик Yoll');
+            localStorage.setItem('profile_avatar', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150');
+            
+            // Имитация базы сообщений сервера
+            const defaultChats = {
+                "mario": [
+                    { sender: "incoming", text: "Привет! Твоя новая игра просто бомба, когда обновление?" },
+                    { sender: "outgoing", text: "Привет, спасибо! Планирую выпустить на следующей неделе." }
+                ]
+            };
+            localStorage.setItem('server_chats', JSON.stringify(defaultChats));
+            localStorage.setItem('yoll_initialized', 'true');
+        }
+
+        // РЕАКТИВНАЯ СИСТЕМНАЯ СБОРКА ИНТЕРФЕЙСА
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons(); // Рендерим иконки Lucide
+
+            // --- НАВИГАЦИЯ ПО ВКЛАДКАМ ---
+            const navItems = document.querySelectorAll(".nav-item[data-screen]");
+            const screens = document.querySelectorAll(".screen");
+
+            navItems.forEach(item => {
+                item.addEventListener("click", () => {
+                    const targetScreen = item.getAttribute("data-screen");
+                    
+                    // Смена активного класса в табах
+                    navItems.forEach(i => i.classList.remove("active"));
+                    item.classList.add("active");
+
+                    // Плавное скрытие текущего экрана и показ нового
+                    screens.forEach(screen => {
+                        if(screen.classList.contains("active")) {
+                            screen.style.opacity = "0";
+                            screen.style.transform = "translateY(12px)";
+                            setTimeout(() => {
+                                screen.classList.remove("active");
+                            }, 200);
+                        }
+                    });
+
+                    setTimeout(() => {
+                        const nextScreen = document.getElementById(`screen-${targetScreen}`);
+                        nextScreen.classList.add("active");
+                        // Даем браузеру пересчитать стили для триггера анимации
+                        setTimeout(() => {
+                            nextScreen.style.opacity = "1";
+                            nextScreen.style.transform = "translateY(0)";
+                        }, 50);
+                    }, 210);
+
+                    // Спец-апдейты вкладок при переходе
+                    if(targetScreen === 'stats') renderStats();
+                    if(targetScreen === 'recommendations') renderMarket();
+                });
+            });
+
+            // --- МОДАЛЬНОЕ ОКНО ПЛЮС ---
+            const plusBtn = document.getElementById("btn-trigger-plus");
+            const modalOverlay = document.getElementById("add-game-modal");
+            const closeModalBtn = document.getElementById("btn-close-modal");
+
+            plusBtn.addEventListener("click", () => modalOverlay.classList.add("open"));
+            closeModalBtn.addEventListener("click", () => modalOverlay.classList.remove("open"));
+
+            // Обработка логики "Бесплатно" в форме
+            const priceInput = document.getElementById("form-game-price");
+            const freeCheckbox = document.getElementById("form-game-free");
+
+            freeCheckbox.addEventListener("change", () => {
+                if(freeCheckbox.checked) {
+                    priceInput.value = 0;
+                    priceInput.disabled = true;
+                } else {
+                    priceInput.value = "";
+                    priceInput.disabled = false;
+                }
+            });
+
+            // Чтение изображений / файлов через FileReader (Загрузка картинок)
+            const iconInput = document.getElementById("form-game-icon");
+            const iconPreview = document.getElementById("form-icon-preview");
+            const iconFileName = document.getElementById("icon-file-name");
+            let encodedIconBase64 = "";
+
+            iconInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    iconFileName.innerText = file.name;
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        iconPreview.src = event.target.result;
+                        iconPreview.style.display = "block";
+                        encodedIconBase64 = event.target.result; // Сохраняем строку картинки
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Название HTML файла игры
+            const gameFileInput = document.getElementById("form-game-file");
+            const gameFileName = document.getElementById("game-file-name");
+            gameFileInput.addEventListener("change", (e) => {
+                if(e.target.files[0]) gameFileName.innerText = e.target.files[0].name;
+            });
+
+            // ОТПРАВКА ИГРЫ (ИМИТАЦИЯ СЕРВЕРНОГО POST-ЗАПРОСА)
+            document.getElementById("add-game-form").addEventListener("submit", () => {
+                const title = document.getElementById("form-game-title").value;
+                const priceValue = freeCheckbox.checked ? "Бесплатно" : `${priceInput.value} ₽`;
+
+                const newGameObj = {
+                    id: Date.now(),
+                    title: title,
+                    price: priceValue,
+                    cover: encodedIconBase64 || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300",
+                    isUserOwned: true,
+                    // Имитация серверных собираемых метрик:
+                    sales: Math.floor(Math.random() * 450) + 12, 
+                    hoursPlayed: Math.floor(Math.random() * 3000) + 85
+                };
+
+                // Пишем в Market
+                const marketGames = JSON.parse(localStorage.getItem('market_games'));
+                marketGames.unshift(newGameObj);
+                localStorage.setItem('market_games', JSON.stringify(marketGames));
+
+                // Пишем в личную студию разработчика
+                const userGames = JSON.parse(localStorage.getItem('user_published_games'));
+                userGames.unshift(newGameObj);
+                localStorage.setItem('user_published_games', JSON.stringify(userGames));
+
+                // Очистка формы и закрытие
+                document.getElementById("add-game-form").reset();
+                priceInput.disabled = false;
+                iconPreview.style.display = "none";
+                iconFileName.innerText = "Выбрать изображение";
+                gameFileName.innerText = "Загрузить .html файл";
+                modalOverlay.classList.remove("open");
+
+                // Перерендерить текущий маркет
+                renderMarket();
+            });
+
+
+            // --- ЛОГИКА МАРКЕТА (РЕКОМЕНДАЦИИ) + ОНЛАЙН ФИЛЬТР ---
+            const marketContainer = document.getElementById("games-market-list");
+            const searchInput = document.getElementById("game-search");
+
+            function renderMarket(filterKeyword = "") {
+                const games = JSON.parse(localStorage.getItem('market_games')) || [];
+                marketContainer.innerHTML = "";
+
+                const filtered = games.filter(g => g.title.toLowerCase().includes(filterKeyword.toLowerCase()));
+
+                if(filtered.length === 0) {
+                    marketContainer.innerHTML = `<div class="empty-state" style="grid-column: span 2;">Игры не найдены</div>`;
+                    return;
+                }
+
+                filtered.forEach(game => {
+                    const card = document.createElement("div");
+                    card.className = "game-card";
+                    card.innerHTML = `
+                        <div class="game-cover-wrapper">
+                            <img src="${game.cover}" class="game-cover" alt="Обложка">
+                        </div>
+                        <div class="game-title">${game.title}</div>
+                        <div class="game-price">${game.price}</div>
+                    `;
+                    marketContainer.appendChild(card);
+                });
+            }
+
+            searchInput.addEventListener("input", (e) => {
+                renderMarket(e.target.value);
+            });
+
+
+            // --- ЛОГИКА СТАТИСТИКИ ---
+            const statsContainer = document.getElementById("stats-container");
+
+            function renderStats() {
+                const userGames = JSON.parse(localStorage.getItem('user_published_games')) || [];
+                statsContainer.innerHTML = "";
+
+                if(userGames.length === 0) {
+                    statsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i data-lucide="folder-lock" style="width: 48px; height: 48px; margin: 0 auto 12px auto; stroke-width: 1.5;"></i>
+                            У вас пока нет выложенных игр. Статистика пуста. Нажмите на центральный плюс, чтобы опубликовать первую игру.
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                userGames.forEach(game => {
+                    const row = document.createElement("div");
+                    row.className = "stat-card";
+                    row.innerHTML = `
+                        <img src="${game.cover}" class="stat-icon-preview">
+                        <div class="stat-info">
+                            <div style="font-weight:600; font-size:16px;">${game.title}</div>
+                            <div class="stat-metrics">
+                                <div class="metric"><i data-lucide="shopping-bag" style="width:12px; display:inline; vertical-align:middle; margin-right:2px;"></i>Копии: <span>${game.sales} шт.</span></div>
+                                <div class="metric"><i data-lucide="clock" style="width:12px; display:inline; vertical-align:middle; margin-right:2px;"></i>Время: <span>${game.hoursPlayed} ч.</span></div>
+                            </div>
+                        </div>
+                    `;
+                    statsContainer.appendChild(row);
+                });
+                lucide.createIcons();
+            }
+
+
+            // --- ЛОГИКА ИМИТАЦИИ СЕРВЕРА МЕССЕНДЖЕРА ---
+            const chatUserSearch = document.getElementById("chat-user-search");
+            const chatBox = document.getElementById("chat-box");
+            const chatInputArea = document.getElementById("chat-input-area");
+            const chatMsgInput = document.getElementById("chat-msg-input");
+            const btnSendMsg = document.getElementById("btn-send-msg");
+            
+            let currentActiveChatUser = null;
+
+            // Обработка логического входа в чат по Enter в поиске
+            chatUserSearch.addEventListener("keydown", (e) => {
+                if(e.key === "Enter") {
+                    const username = chatUserSearch.value.trim().toLowerCase();
+                    if(username) {
+                        currentActiveChatUser = username;
+                        chatInputArea.style.display = "flex";
+                        loadChatLogs(username);
+                    }
+                }
+            });
+
+            function loadChatLogs(username) {
+                const chats = JSON.parse(localStorage.getItem('server_chats')) || {};
+                chatBox.innerHTML = "";
+
+                // Если диалога в базе сервера нет, создадим чистую ветку
+                if(!chats[username]) {
+                    chats[username] = [];
+                    localStorage.setItem('server_chats', JSON.stringify(chats));
+                }
+
+                if(chats[username].length === 0) {
+                    chatBox.innerHTML = `<div class="empty-state" id="chat-placeholder">Чат с @${username} пуст. Отправьте первое сообщение!</div>`;
+                    return;
+                }
+
+                chats[username].forEach(msg => {
+                    const el = document.createElement("div");
+                    el.className = `message ${msg.sender}`;
+                    el.innerText = msg.text;
+                    chatBox.appendChild(el);
+                });
+                autoScrollChat();
+            }
+
+            function autoScrollChat() {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            // Отправка сообщений на внутренний сервер
+            function fireSendMessage() {
+                const text = chatMsgInput.value.trim();
+                if(!text || !currentActiveChatUser) return;
+
+                const chats = JSON.parse(localStorage.getItem('server_chats'));
+                
+                // Пушим исходящее от юзера
+                chats[currentActiveChatUser].push({ sender: "outgoing", text: text });
+                localStorage.setItem('server_chats', JSON.stringify(chats));
+                
+                chatMsgInput.value = "";
+                loadChatLogs(currentActiveChatUser);
+
+                // Эмуляция ответа сервера через 1 секунду
+                setTimeout(() => {
+                    const serverChats = JSON.parse(localStorage.getItem('server_chats'));
+                    const answersPool = [
+                        "Принял! Проверю этот баг в коде игры.",
+                        "Отличная идея, запишу её в бэклог разработки!",
+                        "Спасибо за быстрый ответ!",
+                        "Ха-ха, круто! Буду ждать релиза.",
+                        "Завтра протестирую твой новый билд."
+                    ];
+                    const randomReply = answersPool[Math.floor(Math.random() * answersPool.length)];
+                    
+                    serverChats[currentActiveChatUser].push({ sender: "incoming", text: randomReply });
+                    localStorage.setItem('server_chats', JSON.stringify(serverChats));
+                    
+                    // Перерисовываем если юзер все еще в этом чате
+                    if(currentActiveChatUser) loadChatLogs(currentActiveChatUser);
+                }, 1000);
+            }
+
+            btnSendMsg.addEventListener("click", fireSendMessage);
+            chatMsgInput.addEventListener("keydown", (e) => { if(e.key === 'Enter') fireSendMessage(); });
+
+
+            // --- ПРОФИЛЬ: СМЕНА ИМЕНИ И АВАТАРА ---
+            const displayUserName = document.getElementById("display-user-name");
+            const btnTriggerEditName = document.getElementById("btn-trigger-edit-name");
+            const nameViewBox = document.getElementById("name-view-box");
+            const nameEditBox = document.getElementById("name-edit-box");
+            const inputEditName = document.getElementById("input-edit-name");
+            const btnSaveName = document.getElementById("btn-save-name");
+
+            // Инициализация данных профиля из кэша
+            displayUserName.innerText = localStorage.getItem('profile_name');
+            document.getElementById("user-avatar").src = localStorage.getItem('profile_avatar');
+
+            btnTriggerEditName.addEventListener("click", () => {
+                nameViewBox.style.display = "none";
+                nameEditBox.style.display = "flex";
+                inputEditName.value = displayUserName.innerText;
+                inputEditName.focus();
+            });
+
+            btnSaveName.addEventListener("click", () => {
+                const newName = inputEditName.value.trim();
+                if(newName) {
+                    localStorage.setItem('profile_name', newName);
+                    displayUserName.innerText = newName;
+                }
+                nameEditBox.style.display = "none";
+                nameViewBox.style.display = "flex";
+            });
+
+            // Инпут аватарки
+            const avatarFileInput = document.getElementById("avatar-file-input");
+            avatarFileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById("user-avatar").src = event.target.result;
+                        localStorage.setItem('profile_avatar', event.target.result);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Первый запуск рендера маркета
+            renderMarket();
+        });
+    </script>
+</body>
+</html>
